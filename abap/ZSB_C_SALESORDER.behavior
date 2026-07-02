@@ -1,0 +1,10 @@
+/*
+ * Behavior definition for ZSB_C_SALESORDER — read-only (no transactional ops).
+ * Extend here if approval actions are added later.
+ */
+strict ( 2 );
+
+define behavior for ZSB_C_SALESORDER alias SalesOrder
+{
+  // Read-only list report — no create / update / delete
+}

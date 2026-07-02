@@ -1,0 +1,18 @@
+/*
+ * Service definition: ZSB_SD_SALESORDER
+ * Exposes:
+ *   SalesOrder        — main list entity (ZSB_C_SALESORDER)
+ *   SalesOrderSummary — aggregation entity for the chart tab (ZSB_C_SALESORDER_SUM)
+ *   SalesOrderItems   — navigation target exposed so the Material filter resolves
+ *
+ * Bind this definition to an OData V4 UI binding (ZSB_SB_SALESORDER_O4)
+ * in ADT to generate the service URL.
+ */
+@EndUserText.description: 'Sales Order List Report Service'
+
+define service ZSB_SD_SALESORDER {
+  expose ZSB_C_SALESORDER as SalesOrder {
+    _Items as SalesOrderItems;
+  }
+  expose ZSB_C_SALESORDER_SUM as SalesOrderSummary;
+}

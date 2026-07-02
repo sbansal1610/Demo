@@ -1,0 +1,164 @@
+{
+  "_version": "1.59.0",
+
+  "sap.app": {
+    "id": "zsb.salesorder.list",
+    "type": "application",
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "applicationVersion": { "version": "1.0.0" },
+    "sourceTemplate": {
+      "id": "SAP Fiori elements|ListReport"
+    },
+    "dataSources": {
+      "ZSB_SD_SALESORDER": {
+        "uri": "/sap/opu/odata4/zsb/zsb_sd_salesorder/srvd/zsb/zsb_sd_salesorder/0001/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0",
+          "annotations": []
+        }
+      }
+    }
+  },
+
+  "sap.ui": {
+    "technology": "UI5",
+    "fullWidth": false
+  },
+
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType": "analytical"
+  },
+
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.108.0",
+      "libs": {
+        "sap.m":            {},
+        "sap.ui.core":      {},
+        "sap.ushell":       {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "ZSB_SD_SALESORDER",
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode":       "Server",
+          "autoExpandSelect":    true
+        }
+      },
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName":    "zsb.salesorder.list.i18n.i18n",
+          "supportedLocales": [""],
+          "fallbackLocale":   ""
+        }
+      }
+    },
+
+    "routing": {
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name":    "SalesOrderList",
+          "target":  "SalesOrderList"
+        }
+      ],
+      "targets": {
+        "SalesOrderList": {
+          "type": "Component",
+          "id":   "SalesOrderList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet":   "SalesOrder",
+              "initialLoad": "Enabled",
+
+              "filterSettings": {
+                "filterFields": {
+                  "SalesOrganization": {
+                    "label":        "Sales Organization",
+                    "availability": "Default",
+                    "visualFilter": {
+                      "valueList": "SalesOrganization"
+                    }
+                  },
+                  "SalesOrderItems/Material": {
+                    "label":        "Material Number",
+                    "availability": "Default"
+                  },
+                  "CreationDate": {
+                    "label":        "Created On",
+                    "availability": "Default",
+                    "settings": {
+                      "operatorConfiguration": [
+                        { "path": "operator", "equals": "DATERANGE", "exclude": false },
+                        { "path": "operator", "equals": "TODAY",     "exclude": false },
+                        { "path": "operator", "equals": "THISMONTH", "exclude": false },
+                        { "path": "operator", "equals": "THISYEAR",  "exclude": false }
+                      ]
+                    }
+                  }
+                }
+              },
+
+              "views": {
+                "showCounts": true,
+                "paths": [
+                  {
+                    "key":            "table",
+                    "annotationPath": "com.sap.vocabularies.UI.v1.LineItem",
+                    "defaultPath":    "table"
+                  },
+                  {
+                    "key":            "summary",
+                    "entitySet":      "SalesOrderSummary",
+                    "annotationPath": "com.sap.vocabularies.UI.v1.Chart",
+                    "title":          "Summary by Sales Org"
+                  }
+                ]
+              },
+
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type":          "ResponsiveTable",
+                    "selectionMode": "None",
+                    "condensedTableLayout": true,
+                    "personalization": {
+                      "column": true,
+                      "sort":   true,
+                      "filter": true
+                    }
+                  },
+                  "columns": {
+                    "DataField::SalesOrder": {
+                      "width": "10rem"
+                    },
+                    "DataField::SalesOrderType": {
+                      "width": "8rem"
+                    },
+                    "DataField::SalesOrganization": {
+                      "width": "10rem"
+                    },
+                    "DataField::CreatedByUser": {
+                      "width": "12rem"
+                    },
+                    "DataField::CreationDate": {
+                      "width": "10rem"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

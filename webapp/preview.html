@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sales Orders – List Report Preview</title>
+<style>
+  /* ── SAP Horizon design tokens ─────────────────────────────────── */
+  :root{
+    --sapPrimary:#0070F2;
+    --sapPrimaryHover:#0064D9;
+    --sapShellColor:#1C2D3E;
+    --sapPageBg:#F5F6F7;
+    --sapTileBg:#FFFFFF;
+    --sapBorderColor:#D5D5D5;
+    --sapTextColor:#1D2D3E;
+    --sapSubtleText:#556B82;
+    --sapFont:'72','72full',Arial,Helvetica,sans-serif;
+    --sapFontSize:0.875rem;
+    --sapRadius:0.5rem;
+    --sapShadow:0 0 0 1px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sapFont);font-size:var(--sapFontSize);background:var(--sapPageBg);color:var(--sapTextColor)}
+
+  /* ── Shell bar ──────────────────────────────────────────────────── */
+  .shell{background:var(--sapShellColor);height:2.75rem;display:flex;align-items:center;padding:0 1rem;gap:0.75rem}
+  .shell-logo{width:1.5rem;height:1.5rem;background:#FFFFFF20;border-radius:4px;display:flex;align-items:center;justify-content:center}
+  .shell-logo svg{width:1rem;height:1rem;fill:#fff}
+  .shell-title{color:#fff;font-size:0.9375rem;font-weight:600}
+  .shell-spacer{flex:1}
+  .shell-avatar{width:2rem;height:2rem;background:var(--sapPrimary);border-radius:50%;color:#fff;font-size:0.75rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+  /* ── Page header ────────────────────────────────────────────────── */
+  .page-header{background:var(--sapTileBg);border-bottom:1px solid var(--sapBorderColor);padding:0.75rem 1.5rem;display:flex;align-items:center;gap:1rem}
+  .page-title{font-size:1.25rem;font-weight:600;color:var(--sapTextColor)}
+  .badge{background:var(--sapPrimary);color:#fff;font-size:0.6875rem;font-weight:600;padding:0.125rem 0.4rem;border-radius:0.75rem;margin-left:0.25rem}
+
+  /* ── Filter bar ─────────────────────────────────────────────────── */
+  .filter-bar{background:var(--sapTileBg);border-bottom:1px solid var(--sapBorderColor);padding:0.75rem 1.5rem}
+  .filter-bar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.625rem}
+  .filter-bar-label{font-size:0.75rem;font-weight:600;color:var(--sapSubtleText);text-transform:uppercase;letter-spacing:.05em}
+  .filter-row{display:flex;flex-wrap:wrap;gap:0.75rem;align-items:flex-end}
+  .filter-field{display:flex;flex-direction:column;gap:0.25rem;min-width:11rem}
+  .filter-field label{font-size:0.75rem;color:var(--sapSubtleText);font-weight:500}
+  .filter-field input,.filter-field select{border:1px solid var(--sapBorderColor);border-radius:0.375rem;padding:0.375rem 0.5rem;font-size:0.875rem;font-family:var(--sapFont);background:#fff;color:var(--sapTextColor);outline:none;height:2rem}
+  .filter-field input:focus,.filter-field select:focus{border-color:var(--sapPrimary);box-shadow:0 0 0 2px #0070F220}
+  .filter-tag{display:inline-flex;align-items:center;gap:0.25rem;background:#E8F1FD;color:var(--sapPrimary);border:1px solid #C8DFFB;border-radius:1rem;font-size:0.75rem;padding:0.125rem 0.5rem}
+  .filter-tag button{background:none;border:none;cursor:pointer;color:var(--sapPrimary);font-size:0.875rem;line-height:1;padding:0}
+  .btn{display:inline-flex;align-items:center;gap:0.375rem;padding:0 0.875rem;height:2rem;border-radius:0.375rem;font-size:0.875rem;font-family:var(--sapFont);font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s,border-color .15s}
+  .btn-primary{background:var(--sapPrimary);color:#fff;border-color:var(--sapPrimary)}
+  .btn-primary:hover{background:var(--sapPrimaryHover)}
+  .btn-ghost{background:transparent;color:var(--sapPrimary);border-color:var(--sapPrimary)}
+  .btn-ghost:hover{background:#E8F1FD}
+
+  /* ── Tab bar ────────────────────────────────────────────────────── */
+  .tab-bar{background:var(--sapTileBg);border-bottom:1px solid var(--sapBorderColor);padding:0 1.5rem;display:flex;gap:0}
+  .tab{padding:0.625rem 1rem;font-size:0.875rem;cursor:pointer;color:var(--sapSubtleText);border-bottom:2px solid transparent;font-weight:500;transition:color .15s,border-color .15s;user-select:none}
+  .tab.active{color:var(--sapPrimary);border-bottom-color:var(--sapPrimary)}
+  .tab:hover:not(.active){color:var(--sapTextColor)}
+  .tab-count{background:#F0F0F0;color:var(--sapSubtleText);font-size:0.6875rem;font-weight:600;border-radius:.75rem;padding:.1rem .4rem;margin-left:.3rem}
+  .tab.active .tab-count{background:#E8F1FD;color:var(--sapPrimary)}
+
+  /* ── Toolbar ────────────────────────────────────────────────────── */
+  .toolbar{background:var(--sapTileBg);padding:0.5rem 1.5rem;display:flex;align-items:center;gap:0.5rem;border-bottom:1px solid var(--sapBorderColor)}
+  .toolbar-spacer{flex:1}
+  .toolbar-text{font-size:0.8125rem;color:var(--sapSubtleText)}
+
+  /* ── Table ──────────────────────────────────────────────────────── */
+  .table-wrap{padding:0 1.5rem 1.5rem;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;background:var(--sapTileBg);border-radius:var(--sapRadius);box-shadow:var(--sapShadow);overflow:hidden;margin-top:0.75rem}
+  thead tr{background:#F5F6F7;border-bottom:2px solid var(--sapBorderColor)}
+  th{padding:0.625rem 0.875rem;text-align:left;font-size:0.8125rem;font-weight:600;color:var(--sapSubtleText);white-space:nowrap;user-select:none}
+  th.sortable{cursor:pointer}
+  th.sortable:hover{color:var(--sapPrimary)}
+  .sort-icon{margin-left:0.25rem;opacity:0.5;font-size:0.7rem}
+  .sort-active .sort-icon{opacity:1;color:var(--sapPrimary)}
+  td{padding:0.625rem 0.875rem;font-size:0.875rem;border-bottom:1px solid #EBEBEB;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#F7FAFF}
+  .order-link{color:var(--sapPrimary);text-decoration:none;font-weight:600}
+  .order-link:hover{text-decoration:underline}
+  .type-chip{display:inline-block;padding:.1rem .45rem;border-radius:.25rem;font-size:.75rem;font-weight:600;background:#EEF2F7;color:#556B82}
+  .avatar-cell{display:flex;align-items:center;gap:0.5rem}
+  .mini-avatar{width:1.5rem;height:1.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6875rem;font-weight:700;color:#fff;flex-shrink:0}
+
+  /* ── Summary / Chart section ────────────────────────────────────── */
+  .chart-section{padding:1.5rem;display:none}
+  .chart-section.active{display:block}
+  .chart-card{background:var(--sapTileBg);border-radius:var(--sapRadius);box-shadow:var(--sapShadow);padding:1.25rem}
+  .chart-title{font-size:1rem;font-weight:600;margin-bottom:0.25rem}
+  .chart-sub{font-size:0.8125rem;color:var(--sapSubtleText);margin-bottom:1.25rem}
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+  .kpi-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+  .kpi-tile{flex:1;min-width:9rem;background:var(--sapTileBg);border:1px solid var(--sapBorderColor);border-radius:var(--sapRadius);padding:.875rem 1rem}
+  .kpi-label{font-size:.75rem;color:var(--sapSubtleText);margin-bottom:.25rem}
+  .kpi-value{font-size:1.625rem;font-weight:700;color:var(--sapTextColor);line-height:1}
+  .kpi-delta{font-size:.75rem;color:#188918;margin-top:.25rem}
+  /* bar chart */
+  .bar-chart{width:100%}
+  .bar-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.625rem}
+  .bar-label{width:3.5rem;font-size:.8125rem;color:var(--sapSubtleText);text-align:right;white-space:nowrap}
+  .bar-track{flex:1;height:1.5rem;background:#EEF2F7;border-radius:.25rem;overflow:hidden;position:relative}
+  .bar-fill{height:100%;border-radius:.25rem;display:flex;align-items:center;padding-left:.5rem;font-size:.75rem;font-weight:600;color:#fff;transition:width .6s ease;min-width:2rem}
+  .bar-count{width:2rem;font-size:.8125rem;font-weight:600;color:var(--sapTextColor);text-align:left}
+
+  /* ── Responsive ─────────────────────────────────────────────────── */
+  @media(max-width:700px){
+    .filter-row{flex-direction:column}
+    .filter-field{min-width:100%}
+    th:nth-child(4),td:nth-child(4){display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- Shell bar -->
+<div class="shell">
+  <div class="shell-logo">
+    <svg viewBox="0 0 16 16"><path d="M8 0L0 4v8l8 4 8-4V4L8 0zm0 2.24L14 5.5v5l-6 3-6-3v-5L8 2.24z"/></svg>
+  </div>
+  <span class="shell-title">SAP Fiori Launchpad</span>
+  <div class="shell-spacer"></div>
+  <div class="shell-avatar">SB</div>
+</div>
+
+<!-- Page header -->
+<div class="page-header">
+  <div class="page-title">Sales Orders <span class="badge" id="totalBadge">7</span></div>
+  <div class="shell-spacer"></div>
+  <button class="btn btn-ghost" onclick="resetFilters()">Reset</button>
+  <button class="btn btn-primary" onclick="applyFilters()">&#128269; Search</button>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <div class="filter-bar-header">
+    <span class="filter-bar-label">Filters</span>
+    <div id="activeTags" style="display:flex;gap:.375rem;flex-wrap:wrap"></div>
+  </div>
+  <div class="filter-row">
+    <div class="filter-field">
+      <label>Sales Organization</label>
+      <select id="fSalesOrg">
+        <option value="">All</option>
+        <option value="USCA">USCA – US Central Area</option>
+        <option value="USEA">USEA – US East Area</option>
+        <option value="DE01">DE01 – Germany</option>
+        <option value="APAC">APAC – Asia Pacific</option>
+      </select>
+    </div>
+    <div class="filter-field">
+      <label>Material Number</label>
+      <input id="fMaterial" type="text" placeholder="e.g. MAT-1001" />
+    </div>
+    <div class="filter-field" style="min-width:8rem">
+      <label>Created On (From)</label>
+      <input id="fDateFrom" type="date" value="2026-06-01"/>
+    </div>
+    <div class="filter-field" style="min-width:8rem">
+      <label>Created On (To)</label>
+      <input id="fDateTo" type="date" value="2026-07-02"/>
+    </div>
+  </div>
+</div>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <div class="tab active" id="tab-list" onclick="switchTab('list')">
+    List <span class="tab-count" id="listCount">7</span>
+  </div>
+  <div class="tab" id="tab-summary" onclick="switchTab('summary')">
+    Summary by Sales Org <span class="tab-count" id="summaryCount">4</span>
+  </div>
+</div>
+
+<!-- ── LIST VIEW ──────────────────────────────────────────────────── -->
+<div id="view-list">
+  <div class="toolbar">
+    <span class="toolbar-text" id="resultText">7 Sales Orders</span>
+    <div class="toolbar-spacer"></div>
+    <button class="btn btn-ghost" style="font-size:.8125rem">&#8645; Sort</button>
+    <button class="btn btn-ghost" style="font-size:.8125rem">&#9776; Group</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable sort-active">Sales Order <span class="sort-icon">&#9650;</span></th>
+          <th class="sortable">Order Type <span class="sort-icon">&#8645;</span></th>
+          <th class="sortable">Sales Org <span class="sort-icon">&#8645;</span></th>
+          <th class="sortable">Created By <span class="sort-icon">&#8645;</span></th>
+          <th class="sortable">Created On <span class="sort-icon">&#8645;</span></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── SUMMARY VIEW ──────────────────────────────────────────────── -->
+<div id="view-summary" class="chart-section">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Orders by Sales Organization</div>
+      <div class="chart-sub">Count of distinct sales orders per organization</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Orders by Type</div>
+      <div class="chart-sub">Breakdown of order categories</div>
+      <div class="bar-chart" id="barChartType"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Mock data ───────────────────────────────────────────────────── */
+const ALL_ORDERS = [
+  { id:'4500001234', type:'OR',   org:'USCA', createdBy:'J. Smith',   date:'2026-06-03', material:'MAT-1001' },
+  { id:'4500001235', type:'ZOR',  org:'USEA', createdBy:'A. Johnson', date:'2026-06-10', material:'MAT-2005' },
+  { id:'4500001236', type:'OR',   org:'DE01', createdBy:'H. Müller',  date:'2026-06-15', material:'MAT-1001' },
+  { id:'4500001237', type:'OR',   org:'USCA', createdBy:'E. Brown',   date:'2026-06-22', material:'MAT-3011' },
+  { id:'4500001238', type:'ZSCH', org:'DE01', createdBy:'K. Weber',   date:'2026-06-28', material:'MAT-2005' },
+  { id:'4500001239', type:'OR',   org:'USCA', createdBy:'R. Davis',   date:'2026-06-30', material:'MAT-1001' },
+  { id:'4500001240', type:'OR',   org:'APAC', createdBy:'L. Wei',     date:'2026-07-01', material:'MAT-4002' },
+];
+
+const AVATAR_COLORS = ['#0070F2','#6E4A7E','#188918','#D04A02','#1A6E73','#B0002C'];
+function avatarColor(name){ return AVATAR_COLORS[name.charCodeAt(0)%AVATAR_COLORS.length] }
+function initials(name){ return name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase() }
+function fmtDate(d){ const p=d.split('-'); return `${p[2]}.${p[1]}.${p[0]}` }
+
+/* ── Filtering ───────────────────────────────────────────────────── */
+let currentData = [...ALL_ORDERS];
+
+function applyFilters(){
+  const org  = document.getElementById('fSalesOrg').value;
+  const mat  = document.getElementById('fMaterial').value.trim().toUpperCase();
+  const from = document.getElementById('fDateFrom').value;
+  const to   = document.getElementById('fDateTo').value;
+
+  currentData = ALL_ORDERS.filter(o=>{
+    if(org  && o.org !== org) return false;
+    if(mat  && !o.material.toUpperCase().includes(mat)) return false;
+    if(from && o.date < from) return false;
+    if(to   && o.date > to)   return false;
+    return true;
+  });
+  renderAll();
+  renderActiveTags();
+}
+
+function resetFilters(){
+  document.getElementById('fSalesOrg').value='';
+  document.getElementById('fMaterial').value='';
+  document.getElementById('fDateFrom').value='2026-06-01';
+  document.getElementById('fDateTo').value='2026-07-02';
+  currentData=[...ALL_ORDERS];
+  renderAll();
+  renderActiveTags();
+}
+
+function renderActiveTags(){
+  const tags=[];
+  const org=document.getElementById('fSalesOrg').value;
+  const mat=document.getElementById('fMaterial').value.trim();
+  if(org) tags.push({label:`Sales Org: ${org}`, clear:()=>{document.getElementById('fSalesOrg').value='';applyFilters();}});
+  if(mat) tags.push({label:`Material: ${mat}`,  clear:()=>{document.getElementById('fMaterial').value='';applyFilters();}});
+  const box=document.getElementById('activeTags');
+  box.innerHTML=tags.map((_,i)=>
+    `<span class="filter-tag">${tags[i].label}<button onclick="clearTag(${i})">&#10005;</button></span>`
+  ).join('');
+  window._tagClearFns=tags.map(t=>t.clear);
+}
+function clearTag(i){ window._tagClearFns[i](); }
+
+/* ── Table render ─────────────────────────────────────────────────── */
+function renderTable(){
+  const tb = document.getElementById('tableBody');
+  if(!currentData.length){
+    tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--sapSubtleText)">No sales orders match the selected filters.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = currentData.map(o=>`
+    <tr>
+      <td><a class="order-link" href="#">${o.id}</a></td>
+      <td><span class="type-chip">${o.type}</span></td>
+      <td>${o.org}</td>
+      <td>
+        <div class="avatar-cell">
+          <div class="mini-avatar" style="background:${avatarColor(o.createdBy)}">${initials(o.createdBy)}</div>
+          ${o.createdBy}
+        </div>
+      </td>
+      <td>${fmtDate(o.date)}</td>
+    </tr>`).join('');
+  const n=currentData.length;
+  document.getElementById('resultText').textContent=`${n} Sales Order${n!==1?'s':''}`;
+  document.getElementById('totalBadge').textContent=n;
+  document.getElementById('listCount').textContent=n;
+}
+
+/* ── Summary render ───────────────────────────────────────────────── */
+function renderSummary(){
+  /* KPI tiles */
+  const orgs=[...new Set(currentData.map(o=>o.org))];
+  const total=currentData.length;
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi-tile"><div class="kpi-label">Total Orders</div><div class="kpi-value">${total}</div><div class="kpi-delta">&#9650; 12% vs last month</div></div>
+    <div class="kpi-tile"><div class="kpi-label">Sales Organizations</div><div class="kpi-value">${orgs.length}</div></div>
+    <div class="kpi-tile"><div class="kpi-label">Order Types</div><div class="kpi-value">${[...new Set(currentData.map(o=>o.type))].length}</div></div>
+    <div class="kpi-tile"><div class="kpi-label">Latest Order</div><div class="kpi-value" style="font-size:1rem">${currentData.length?fmtDate([...currentData].sort((a,b)=>b.date.localeCompare(a.date))[0].date):'–'}</div></div>
+  `;
+
+  /* Bar chart by Sales Org */
+  const byOrg={};
+  currentData.forEach(o=>{ byOrg[o.org]=(byOrg[o.org]||0)+1; });
+  const maxOrg=Math.max(...Object.values(byOrg),1);
+  const BAR_COLORS=['#0070F2','#6E4A7E','#188918','#D04A02','#1A6E73'];
+  document.getElementById('barChart').innerHTML=
+    Object.entries(byOrg).sort((a,b)=>b[1]-a[1]).map(([k,v],i)=>`
+      <div class="bar-row">
+        <div class="bar-label">${k}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${Math.round(v/maxOrg*100)}%;background:${BAR_COLORS[i%BAR_COLORS.length]}">${v}</div>
+        </div>
+        <div class="bar-count">${v}</div>
+      </div>`).join('');
+
+  /* Bar chart by Type */
+  const byType={};
+  currentData.forEach(o=>{ byType[o.type]=(byType[o.type]||0)+1; });
+  const maxType=Math.max(...Object.values(byType),1);
+  document.getElementById('barChartType').innerHTML=
+    Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([k,v],i)=>`
+      <div class="bar-row">
+        <div class="bar-label">${k}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${Math.round(v/maxType*100)}%;background:${BAR_COLORS[(i+2)%BAR_COLORS.length]}">${v}</div>
+        </div>
+        <div class="bar-count">${v}</div>
+      </div>`).join('');
+
+  document.getElementById('summaryCount').textContent=orgs.length;
+}
+
+/* ── Tab switch ───────────────────────────────────────────────────── */
+function switchTab(name){
+  document.getElementById('view-list').style.display    = name==='list'?'block':'none';
+  document.getElementById('view-summary').style.display = name==='summary'?'block':'none';
+  document.getElementById('tab-list').classList.toggle('active',    name==='list');
+  document.getElementById('tab-summary').classList.toggle('active', name==='summary');
+}
+
+function renderAll(){ renderTable(); renderSummary(); }
+
+/* ── Boot ─────────────────────────────────────────────────────────── */
+renderAll();
+</script>
+</body>
+</html>
